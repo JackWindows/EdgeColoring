@@ -2,9 +2,8 @@ maxcolornumber = 10
 class Node:
     def __init__(self):
         self.color = [True] * maxcolornumber
-        self.edgeList = []
+        self.incidentEdges = [None] * maxcolornumber
         self.variableList = []
-        self.waitingList = []
     def assigncolor(self):
         for i in range(0,maxcolornumber):
             if self.color[i]:
@@ -29,25 +28,6 @@ class Node:
             else:
                 return self.edgeList[mid]
         return None
-    def insertedge(self,edge):
-        target=edge.leftcolor*maxcolornumber + edge.rightcolor
-        low=0
-        high=len(self.edgeList)-1
-        mid=0
-        offset=0
-        while(low<=high):
-            mid=(low+high)//2
-            #print mid
-            midVal=self.edgeList[mid].leftcolor*maxcolornumber + self.edgeList[mid].rightcolor
-            if(midVal<target):
-                low=mid+1
-                offset=1
-            elif midVal>target:
-                high=mid-1
-                offset=0
-        self.edgeList.insert(mid+offset,edge)
-        if(edge.leftcolor != edge.rightcolor):
-            self.variableList.append(edge)
     def relocateedge(self,edge):
         self.edgeList.remove(edge)
         target=edge.leftcolor*maxcolornumber + edge.rightcolor
@@ -76,145 +56,129 @@ class Edge:
         self.id = -1
         
     def __str__(self):
-        return str([self.leftnode,self.leftcolor,self.rightnode,self.rightcolor])
+        return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id])
     def __repr__(self):
-        return str([self.leftnode,self.leftcolor,self.rightnode,self.rightcolor])
+        return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id])
 
 class ExThread:
     def __init__(self,node):
         self.node = node
     def move(self):
-        for edge in nodes[self.node].waitingList:
-            nodes[self.node].relocateedge(edge)
-        nodes[self.node].waitingList=[]
         edges=set()
         judge=False
+        #print self.node
         #print nodes[self.node].variableList
-        #print nodes[self.node].edgeList
+        #print nodes[self.node].incidentEdges
         for edge1 in nodes[self.node].variableList:
             if(self.node < n):
                 if(edge1 not in edges):
-                    if(nodes[self.node].color[edge1.rightcolor]):
+                    edge2=nodes[self.node].incidentEdges[edge1.rightcolor]
+                    if edge2 is None:
                         nodes[self.node].exchangecolor(edge1.leftcolor,edge1.rightcolor)
+                        nodes[self.node].incidentEdges[edge1.rightcolor]=edge1
+                        nodes[self.node].incidentEdges[edge1.leftcolor]=None
                         edge1.leftcolor=edge1.rightcolor
                         nodes[self.node].variableList.remove(edge1)
-                        nodes[self.node].relocateedge(edge1)
                         nodes[edge1.rightnode].variableList.remove(edge1)
-                        nodes[edge1.rightnode].waitingList.append(edge1)
                         edge1.id=-1
                         edges.add(edge1)
                         judge=True
                         continue
-                    edge2=nodes[self.node].getedgebycolor(edge1.rightcolor,edge1.leftcolor)
-                    if(edge2 is not None and edge2 not in edges):
+                    elif edge2 not in edges and edge2.rightcolor==edge1.leftcolor:
+                        nodes[self.node].incidentEdges[edge2.leftcolor]=edge1
+                        nodes[self.node].incidentEdges[edge1.leftcolor]=edge2
                         temp=edge1.leftcolor
                         edge1.leftcolor=edge2.leftcolor
                         edge2.leftcolor=temp
-                        temp=edge1.id
-                        edge1.id=edge2.id
-                        edge2.id=temp
+                        edge1.id=-1
+                        edge2.id=-1
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.remove(edge2)
-                        nodes[self.node].relocateedge(edge1)
-                        nodes[self.node].relocateedge(edge2)
                         nodes[edge1.rightnode].variableList.remove(edge1)
-                        nodes[edge1.rightnode].waitingList.append(edge1)
                         nodes[edge2.rightnode].variableList.remove(edge2)
-                        nodes[edge2.rightnode].waitingList.append(edge2)
                         edges.add(edge1)
                         edges.add(edge2)
                         judge=True
                         continue
-                    edge2=nodes[self.node].getedgebycolor(edge1.rightcolor,edge1.rightcolor)
-                    if(edge2 is not None and edge2 not in edges):
+                    elif edge2 not in edges and edge2.rightcolor==edge1.rightcolor:
                         if(edge1.leftcolor<edge1.rightcolor):
                             index=edge1.leftcolor*maxcolornumber+edge1.rightcolor
                         else:
                             index=edge1.rightcolor*maxcolornumber+edge1.leftcolor
                         if index in initialPos:
                             if edge2 in initialPos[index]:
-                                if edge1.id<edge2.leftnode:
+                                if edge1.id>edge2.leftnode:
                                     continue
+                        nodes[self.node].incidentEdges[edge2.leftcolor]=edge1
+                        nodes[self.node].incidentEdges[edge1.leftcolor]=edge2
                         temp=edge1.leftcolor
                         edge1.leftcolor=edge2.leftcolor
                         edge2.leftcolor=temp
-                        temp=edge1.id
-                        edge1.id=edge2.id
-                        edge2.id=temp
+                        edge2.id=edge1.id
+                        edge1.id=-1
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.append(edge2)
-                        nodes[self.node].relocateedge(edge1)
-                        nodes[self.node].relocateedge(edge2)
                         nodes[edge1.rightnode].variableList.remove(edge1)
-                        nodes[edge1.rightnode].waitingList.append(edge1)
                         nodes[edge2.rightnode].variableList.append(edge2)
-                        nodes[edge2.rightnode].waitingList.append(edge2)
                         edges.add(edge1)
                         edges.add(edge2)
                         judge=True
                         continue
             else:
                 if(edge1 not in edges):
-                    if(nodes[self.node].color[edge1.leftcolor]):
+                    edge2=nodes[self.node].incidentEdges[edge1.leftcolor]
+                    if edge2 is None:
                         nodes[self.node].exchangecolor(edge1.leftcolor,edge1.rightcolor)
+                        nodes[self.node].incidentEdges[edge1.leftcolor]=edge1
+                        nodes[self.node].incidentEdges[edge1.rightcolor]=None
                         edge1.rightcolor=edge1.leftcolor
                         nodes[self.node].variableList.remove(edge1)
-                        nodes[self.node].relocateedge(edge1)
                         nodes[edge1.leftnode].variableList.remove(edge1)
-                        nodes[edge1.leftnode].waitingList.append(edge1)
-                        edges.add(edge1)
                         edge1.id=-1
+                        edges.add(edge1)
                         judge=True
                         continue
-                    edge2=nodes[self.node].getedgebycolor(edge1.rightcolor,edge1.leftcolor)
-                    if(edge2 is not None and edge2 not in edges):
+                    elif edge2 not in edges and edge2.leftcolor==edge1.rightcolor:
+                        nodes[self.node].incidentEdges[edge2.rightcolor]=edge1
+                        nodes[self.node].incidentEdges[edge1.rightcolor]=edge2
                         temp=edge1.rightcolor
                         edge1.rightcolor=edge2.rightcolor
                         edge2.rightcolor=temp
-                        temp=edge1.id
-                        edge1.id=edge2.id
-                        edge2.id=temp
+                        edge1.id=-1
+                        edge2.id=-1
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.remove(edge2)
-                        nodes[self.node].relocateedge(edge1)
-                        nodes[self.node].relocateedge(edge2)
                         nodes[edge1.leftnode].variableList.remove(edge1)
-                        nodes[edge1.leftnode].waitingList.append(edge1)
                         nodes[edge2.leftnode].variableList.remove(edge2)
-                        nodes[edge2.leftnode].waitingList.append(edge2)
                         edges.add(edge1)
                         edges.add(edge2)
                         judge=True
                         continue
-                    edge2=nodes[self.node].getedgebycolor(edge1.leftcolor,edge1.leftcolor)
-                    if(edge2 is not None and edge2 not in edges):
+                    elif edge2 not in edges and edge2.leftcolor==edge1.leftcolor:
                         if(edge1.leftcolor<edge1.rightcolor):
                             index=edge1.leftcolor*maxcolornumber+edge1.rightcolor
                         else:
                             index=edge1.rightcolor*maxcolornumber+edge1.leftcolor
                         if index in initialPos:
                             if edge2 in initialPos[index]:
-                                if edge1.id<edge2.leftnode:
+                                if edge1.id>edge2.leftnode:
                                     continue
+                        nodes[self.node].incidentEdges[edge2.rightcolor]=edge1
+                        nodes[self.node].incidentEdges[edge1.rightcolor]=edge2
                         temp=edge1.rightcolor
                         edge1.rightcolor=edge2.rightcolor
                         edge2.rightcolor=temp
-                        temp=edge1.id
-                        edge1.id=edge2.id
-                        edge2.id=temp
+                        edge2.id=edge1.id
+                        edge1.id=-1
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.append(edge2)
-                        nodes[self.node].relocateedge(edge1)
-                        nodes[self.node].relocateedge(edge2)
                         nodes[edge1.leftnode].variableList.remove(edge1)
-                        nodes[edge1.leftnode].waitingList.append(edge1)
                         nodes[edge2.leftnode].variableList.append(edge2)
-                        nodes[edge2.leftnode].waitingList.append(edge2)
                         edges.add(edge1)
                         edges.add(edge2)
                         judge=True
                         continue
-        if(len(lines)>100):
+        if(len(lines)>50):
             return False
         return judge
 
@@ -324,8 +288,11 @@ while True:
         if request[i]!=-1:
             edge=Edge(i,nodes[i].assigncolor(),request[i]+n,nodes[request[i]+n].assigncolor())
             AdjacencyList.append(edge)
-            nodes[i].insertedge(edge)
-            nodes[request[i]+n].insertedge(edge)
+            nodes[i].incidentEdges[edge.leftcolor]=edge
+            nodes[request[i]+n].incidentEdges[edge.rightcolor]=edge
+            if(edge.leftcolor!=edge.rightcolor):
+                nodes[i].variableList.append(edge)
+                nodes[request[i]+n].variableList.append(edge)
     draw()
 
 ExchangeThreads1=[]

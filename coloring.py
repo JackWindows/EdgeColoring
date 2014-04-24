@@ -1,9 +1,10 @@
-maxcolornumber = 10
+maxcolornumber = 20
 class Node:
     def __init__(self):
         self.color = [True] * maxcolornumber
         self.incidentEdges = [None] * maxcolornumber
         self.variableList = []
+        self.initialEdges = {}
     def assigncolor(self):
         for i in range(0,maxcolornumber):
             if self.color[i]:
@@ -68,7 +69,7 @@ class ExThread:
         judge=False
         #print self.node
         #print nodes[self.node].variableList
-        #print nodes[self.node].incidentEdges
+        #print nodes[self.node].initialEdges
         for edge1 in nodes[self.node].variableList:
             if(self.node < n):
                 if(edge1 not in edges):
@@ -105,10 +106,9 @@ class ExThread:
                             index=edge1.leftcolor*maxcolornumber+edge1.rightcolor
                         else:
                             index=edge1.rightcolor*maxcolornumber+edge1.leftcolor
-                        if index in initialPos:
-                            if edge2 in initialPos[index]:
-                                if edge1.id>edge2.leftnode:
-                                    continue
+                        if index in nodes[edge2.leftnode].initialEdges and nodes[edge2.leftnode].initialEdges[index] is edge2:
+                            if edge1.id>edge2.leftnode:
+                                continue
                         nodes[self.node].incidentEdges[edge2.leftcolor]=edge1
                         nodes[self.node].incidentEdges[edge1.leftcolor]=edge2
                         temp=edge1.leftcolor
@@ -159,10 +159,9 @@ class ExThread:
                             index=edge1.leftcolor*maxcolornumber+edge1.rightcolor
                         else:
                             index=edge1.rightcolor*maxcolornumber+edge1.leftcolor
-                        if index in initialPos:
-                            if edge2 in initialPos[index]:
-                                if edge1.id>edge2.leftnode:
-                                    continue
+                        if index in nodes[edge2.leftnode].initialEdges and nodes[edge2.leftnode].initialEdges[index] is edge2:
+                            if edge1.id>edge2.leftnode:
+                                continue
                         nodes[self.node].incidentEdges[edge2.rightcolor]=edge1
                         nodes[self.node].incidentEdges[edge1.rightcolor]=edge2
                         temp=edge1.rightcolor
@@ -217,6 +216,20 @@ def color(x):
         4: 'k',
         5: 'c',
         6: 'm',
+        7: '#00FFFF',
+        8: '#8A2BE2',
+        9: '#FFE4C4',
+        10: '#6495ED',
+        11: '#D2691E',
+        12: '#00008B',
+        13: '#FF8C00',
+        14: '#A52A2A',
+        15: '#8B008B',
+        16: '#FF1493',
+        17: '#FFFF00',
+        18: '#00FF7F',
+        19: '#CD853F',
+        20: '#800080',
     }[x]
 
 def draw():
@@ -301,7 +314,8 @@ for i in range(n):
 ExchangeThreads2=[]
 for i in range(n):
     ExchangeThreads2.append(ExThread(i+n))
-initialPos={}
+
+
 for edge in AdjacencyList:
     if edge.leftcolor!=edge.rightcolor:
         edge.id=edge.leftnode
@@ -309,11 +323,7 @@ for edge in AdjacencyList:
             index=edge.leftcolor*maxcolornumber+edge.rightcolor
         else:
             index=edge.rightcolor*maxcolornumber+edge.leftcolor
-        if index in initialPos:
-            initialPos[index].add(edge)
-        else:
-            initialPos[index]=set()
-            initialPos[index].add(edge)
+        nodes[edge.leftnode].initialEdges[index]=edge
             
 judge=True
 while(judge):

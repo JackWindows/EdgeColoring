@@ -15,10 +15,10 @@ class Node:
         self.color[y] = temp
 
 class Edge:
-    def __init__(self,leftnode=0,leftcolor=0,rightnode=0,rightcolor=0):
+    def __init__(self,leftnode=0,rightnode=0,leftcolor=0,rightcolor=0):
         self.leftnode = leftnode
-        self.leftcolor = leftcolor
         self.rightnode = rightnode
+        self.leftcolor = leftcolor
         self.rightcolor = rightcolor
         self.id = -1
         
@@ -136,8 +136,6 @@ class ExThread:
                         edges.add(edge2)
                         judge=True
                         continue
-        if(len(lines)>50):
-            return False
         return judge
 
 import random,time
@@ -229,10 +227,13 @@ def press(event):
         #print k
         ax.lines=lines[k]
         plt.draw()
+
+
+
 #main function
 n = 6
 scale = 3
-AdjacencyList = []
+initialEdgesFile='initialEdges'
 lines=[]
 nodes = [Node() for each in range(n*2)]
 fig=plt.figure(figsize=(12,9))
@@ -251,18 +252,39 @@ drawnodes(set1,1)
 drawnodes(set2,2)
 
 slots = 3
-for slot in range(slots):
-    request = RequestGenerator(n)
-    for i in range(0,len(request)):
-        if request[i]!=-1:
-            edge=Edge(i,nodes[i].assigncolor(),request[i]+n,nodes[request[i]+n].assigncolor())
-            AdjacencyList.append(edge)
-            nodes[i].incidentEdges[edge.leftcolor]=edge
-            nodes[request[i]+n].incidentEdges[edge.rightcolor]=edge
-            if(edge.leftcolor!=edge.rightcolor):
-                nodes[i].variableList.append(edge)
-                nodes[request[i]+n].variableList.append(edge)
+AdjacencyList = []
+initialEdges = []
+import os
+if os.path.isfile(initialEdgesFile):
+    f=open(initialEdgesFile)
+    initialEdgesFromFile=f.readlines()
+    for edgeFromFile in initialEdgesFromFile:
+        temp=edgeFromFile[1:-2].split(',')
+        edge=Edge(int(temp[0]),int(temp[1]),int(temp[2]),int(temp[3]))
+        nodes[int(temp[0])].color[int(temp[2])]=False
+        nodes[int(temp[1])].color[int(temp[3])]=False
+        AdjacencyList.append(edge)
+        initialEdges.append(str(edge))
+        nodes[int(temp[0])].incidentEdges[int(temp[2])]=edge
+        nodes[int(temp[1])].incidentEdges[int(temp[3])]=edge
+        if(int(temp[2])!=int(temp[3])):
+            nodes[int(temp[0])].variableList.append(edge)
+            nodes[int(temp[1])].variableList.append(edge)
     draw()
+else:
+    for slot in range(slots):
+        request = RequestGenerator(n)
+        for i in range(0,len(request)):
+            if request[i]!=-1:
+                edge=Edge(i,request[i]+n,nodes[i].assigncolor(),nodes[request[i]+n].assigncolor())
+                AdjacencyList.append(edge)
+                initialEdges.append(str(edge))
+                nodes[i].incidentEdges[edge.leftcolor]=edge
+                nodes[request[i]+n].incidentEdges[edge.rightcolor]=edge
+                if(edge.leftcolor!=edge.rightcolor):
+                    nodes[i].variableList.append(edge)
+                    nodes[request[i]+n].variableList.append(edge)
+        draw()
 
 ExchangeThreads1=[]
 for i in range(n):
@@ -272,7 +294,9 @@ for i in range(n):
     ExchangeThreads2.append(ExThread(i+n))
             
 judge=True
+count=0
 while(judge):
+    count+=1
     judge=False
     for thread in ExchangeThreads2:
         #print thread.node
@@ -284,6 +308,14 @@ while(judge):
         if(thread.move()):
             judge=True
     draw()
+    if count>n*slots*5:
+        #Storage the initial Condition for regenerate the deadlock
+        f=open(initialEdgesFile,'w')
+        for edge in initialEdges:
+            f.write(str(edge)+'\n')
+        f.close()
+        break
+
 k=0
 ax.lines=lines[k]
 plt.show()

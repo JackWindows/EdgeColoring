@@ -22,6 +22,7 @@ class Edge:
         self.rightcolor = rightcolor
         self.id = -1
         self.count = 0
+        self.nodecount = {}
         
     def __str__(self):
         return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id])
@@ -48,6 +49,7 @@ class ExThread:
                         nodes[self.node].variableList.remove(edge1)
                         nodes[edge1.rightnode].variableList.remove(edge1)
                         edge1.id=-1
+                        edge1.nodecount={}
                         edges.add(edge1)
                         judge=True
                         continue
@@ -59,6 +61,8 @@ class ExThread:
                         edge2.leftcolor=temp
                         edge1.id=-1
                         edge2.id=-1
+                        edge1.nodecount={}
+                        edge2.nodecount={}
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.remove(edge2)
                         nodes[edge1.rightnode].variableList.remove(edge1)
@@ -74,13 +78,22 @@ class ExThread:
                                 continue
                         elif edge1.id<edge2.leftnode:
                             edge1.id=edge2.leftnode
+                        if edge1.leftnode not in edge1.nodecount:
+                            edge1.nodecount[edge1.leftnode]=1
+                        else:
+                            edge1.nodecount[edge1.leftnode]+=1
+                        if edge1.nodecount[edge1.leftnode]>=3:
+                            edge1.id=-1
+                            edge1.nodecount={}
                         nodes[self.node].incidentEdges[edge2.leftcolor]=edge1
                         nodes[self.node].incidentEdges[edge1.leftcolor]=edge2
                         temp=edge1.leftcolor
                         edge1.leftcolor=edge2.leftcolor
                         edge2.leftcolor=temp
                         edge2.id=edge1.id
+                        edge2.nodecount=edge1.nodecount
                         edge1.id=-1
+                        edge1.nodecount={}
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.append(edge2)
                         nodes[edge1.rightnode].variableList.remove(edge1)
@@ -97,6 +110,9 @@ class ExThread:
                         edge2.leftcolor=temp
                         edge1.id=-1
                         edge2.id=-1
+                        edge1.nodecount={}
+                        edge2.nodecount={}
+                        edge1.count=0
                         edge2.count=0
                         nodes[self.node].variableList.remove(edge1)
                         nodes[edge1.rightnode].variableList.remove(edge1)
@@ -115,6 +131,7 @@ class ExThread:
                         nodes[self.node].variableList.remove(edge1)
                         nodes[edge1.leftnode].variableList.remove(edge1)
                         edge1.id=-1
+                        edge1.nodecount={}
                         edges.add(edge1)
                         judge=True
                         continue
@@ -126,6 +143,8 @@ class ExThread:
                         edge2.rightcolor=temp
                         edge1.id=-1
                         edge2.id=-1
+                        edge1.nodecount={}
+                        edge2.nodecount={}
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.remove(edge2)
                         nodes[edge1.leftnode].variableList.remove(edge1)
@@ -145,7 +164,9 @@ class ExThread:
                         edge1.rightcolor=edge2.rightcolor
                         edge2.rightcolor=temp
                         edge2.id=edge1.id
+                        edge2.nodecount=edge1.nodecount
                         edge1.id=-1
+                        edge1.nodecount={}
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.append(edge2)
                         nodes[edge1.leftnode].variableList.remove(edge1)
@@ -162,6 +183,9 @@ class ExThread:
                         edge2.rightcolor=temp
                         edge1.id=-1
                         edge2.id=-1
+                        edge1.nodecount={}
+                        edge2.nodecount={}
+                        edge1.count=0
                         edge2.count=0
                         nodes[self.node].variableList.remove(edge1)
                         nodes[edge1.leftnode].variableList.remove(edge1)

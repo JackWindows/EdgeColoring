@@ -13,6 +13,10 @@ class Node:
         temp = self.color[x]
         self.color[x] = self.color[y]
         self.color[y] = temp
+    def __del__(self):
+        del self.color
+        del self.incidentEdges
+        del self.variableList
 
 class Edge:
     def __init__(self,leftnode=0,rightnode=0,leftcolor=0,rightcolor=0):
@@ -22,12 +26,13 @@ class Edge:
         self.rightcolor = rightcolor
         self.id = -1
         self.count = 0
-        self.nodecount = {}
-        
+        self.nodecount = {} 
     def __str__(self):
         return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id])
     def __repr__(self):
         return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id])
+    def __del__(self):
+        del self.nodecount
 
 class ExThread:
     def __init__(self,node):
@@ -209,11 +214,17 @@ n = 6
 initialEdgesFile='initialEdges'
 slots = 3
 step=0
+nodes=[]
+AdjacencyList = []
+initialEdges = []
 
 while True:
     step+=1
     print('Begin '+str(step)+' try')
+    del nodes
     nodes = [Node() for each in range(n*2)]
+    del AdjacencyList
+    del initialEdges
     AdjacencyList = []
     initialEdges = []
     if os.path.isfile(initialEdgesFile):
@@ -261,3 +272,4 @@ while True:
             break
 
 print('deadlock found in '+str(step)+' try')
+raw_input()

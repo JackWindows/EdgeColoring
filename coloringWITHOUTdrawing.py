@@ -38,13 +38,13 @@ class ExThread:
     def __init__(self,node):
         self.node = node
     def move(self):
-        edges=set()
+        colorpairs=set()
         judge=False
-        #print self.node
-        #print nodes[self.node].variableList
-        for edge1 in nodes[self.node].variableList:
+        variableList=nodes[self.node].variableList[:]
+        for edge1 in variableList:
+            if edge1.leftcolor==edge1.rightcolor:
+                continue
             if(self.node < n):
-                if(edge1 not in edges):
                     edge2=nodes[self.node].incidentEdges[edge1.rightcolor]
                     if edge2 is None:
                         nodes[self.node].exchangecolor(edge1.leftcolor,edge1.rightcolor)
@@ -55,10 +55,9 @@ class ExThread:
                         nodes[edge1.rightnode].variableList.remove(edge1)
                         edge1.id=-1
                         edge1.nodecount={}
-                        edges.add(edge1)
                         judge=True
                         continue
-                    elif edge2 not in edges and edge2.rightcolor==edge1.leftcolor:
+                    elif edge1.leftcolor*maxcolornumber+edge2.leftcolor not in colorpairs and edge2.rightcolor==edge1.leftcolor:
                         nodes[self.node].incidentEdges[edge2.leftcolor]=edge1
                         nodes[self.node].incidentEdges[edge1.leftcolor]=edge2
                         temp=edge1.leftcolor
@@ -72,11 +71,27 @@ class ExThread:
                         nodes[self.node].variableList.remove(edge2)
                         nodes[edge1.rightnode].variableList.remove(edge1)
                         nodes[edge2.rightnode].variableList.remove(edge2)
-                        edges.add(edge1)
-                        edges.add(edge2)
+                        colorpairs.add(edge2.leftcolor*maxcolornumber+edge1.leftcolor)
                         judge=True
                         continue
-                    elif edge2 not in edges and edge2.rightcolor==edge1.rightcolor:
+                    elif edge1.leftcolor*maxcolornumber+edge2.leftcolor not in colorpairs and edge2.rightcolor!=edge1.rightcolor:
+                        nodes[self.node].incidentEdges[edge2.leftcolor]=edge1
+                        nodes[self.node].incidentEdges[edge1.leftcolor]=edge2
+                        temp=edge1.leftcolor
+                        edge1.leftcolor=edge2.leftcolor
+                        edge2.leftcolor=temp
+                        edge1.id=-1
+                        edge2.id=-1
+                        edge1.nodecount={}
+                        edge2.nodecount={}
+                        edge1.count=0
+                        edge2.count=0
+                        nodes[self.node].variableList.remove(edge1)
+                        nodes[edge1.rightnode].variableList.remove(edge1)
+                        colorpairs.add(edge2.leftcolor*maxcolornumber+edge1.leftcolor)
+                        judge=True
+                        continue
+                    elif edge1.leftcolor*maxcolornumber+edge2.leftcolor not in colorpairs and edge2.rightcolor==edge1.rightcolor:
                         if edge1.id==edge2.leftnode and edge1.id==edge1.leftnode:
                             edge1.count+=1
                             if edge1.count>=2:
@@ -103,30 +118,10 @@ class ExThread:
                         nodes[self.node].variableList.append(edge2)
                         nodes[edge1.rightnode].variableList.remove(edge1)
                         nodes[edge2.rightnode].variableList.append(edge2)
-                        edges.add(edge1)
-                        edges.add(edge2)
-                        judge=True
-                        continue
-                    elif edge2 not in edges:
-                        nodes[self.node].incidentEdges[edge2.leftcolor]=edge1
-                        nodes[self.node].incidentEdges[edge1.leftcolor]=edge2
-                        temp=edge1.leftcolor
-                        edge1.leftcolor=edge2.leftcolor
-                        edge2.leftcolor=temp
-                        edge1.id=-1
-                        edge2.id=-1
-                        edge1.nodecount={}
-                        edge2.nodecount={}
-                        edge1.count=0
-                        edge2.count=0
-                        nodes[self.node].variableList.remove(edge1)
-                        nodes[edge1.rightnode].variableList.remove(edge1)
-                        edges.add(edge1)
-                        edges.add(edge2)
+                        colorpairs.add(edge2.leftcolor*maxcolornumber+edge1.leftcolor)
                         judge=True
                         continue
             else:
-                if(edge1 not in edges):
                     edge2=nodes[self.node].incidentEdges[edge1.leftcolor]
                     if edge2 is None:
                         nodes[self.node].exchangecolor(edge1.leftcolor,edge1.rightcolor)
@@ -137,10 +132,26 @@ class ExThread:
                         nodes[edge1.leftnode].variableList.remove(edge1)
                         edge1.id=-1
                         edge1.nodecount={}
-                        edges.add(edge1)
                         judge=True
                         continue
-                    elif edge2 not in edges and edge2.leftcolor==edge1.rightcolor:
+                    elif edge1.rightcolor*maxcolornumber+edge2.rightcolor not in colorpairs and edge2.leftcolor==edge1.rightcolor:
+                        nodes[self.node].incidentEdges[edge2.rightcolor]=edge1
+                        nodes[self.node].incidentEdges[edge1.rightcolor]=edge2
+                        temp=edge1.rightcolor
+                        edge1.rightcolor=edge2.rightcolor
+                        edge2.rightcolor=temp
+                        edge1.nodecount={}
+                        edge2.node={}
+                        edge1.id=-1
+                        edge2.id=-1
+                        nodes[self.node].variableList.remove(edge1)
+                        nodes[self.node].variableList.remove(edge2)
+                        nodes[edge1.leftnode].variableList.remove(edge1)
+                        nodes[edge2.leftnode].variableList.remove(edge2)
+                        colorpairs.add(edge2.rightcolor*maxcolornumber+edge1.rightcolor)
+                        judge=True
+                        continue
+                    elif edge1.rightcolor*maxcolornumber+edge2.rightcolor not in colorpairs and edge2.leftcolor!=edge1.leftcolor:
                         nodes[self.node].incidentEdges[edge2.rightcolor]=edge1
                         nodes[self.node].incidentEdges[edge1.rightcolor]=edge2
                         temp=edge1.rightcolor
@@ -150,15 +161,14 @@ class ExThread:
                         edge2.id=-1
                         edge1.nodecount={}
                         edge2.nodecount={}
+                        edge1.count=0
+                        edge2.count=0
                         nodes[self.node].variableList.remove(edge1)
-                        nodes[self.node].variableList.remove(edge2)
                         nodes[edge1.leftnode].variableList.remove(edge1)
-                        nodes[edge2.leftnode].variableList.remove(edge2)
-                        edges.add(edge1)
-                        edges.add(edge2)
+                        colorpairs.add(edge2.rightcolor*maxcolornumber+edge1.rightcolor)
                         judge=True
                         continue
-                    elif edge2 not in edges and edge2.leftcolor==edge1.leftcolor:
+                    elif edge1.rightcolor*maxcolornumber+edge2.rightcolor not in colorpairs and edge2.leftcolor==edge1.leftcolor:
                         #if edge1.id==edge2.leftnode and edge1.id==edge1.leftnode:
                         #    continue
                         #elif edge1.id<edge2.leftnode:
@@ -176,26 +186,7 @@ class ExThread:
                         nodes[self.node].variableList.append(edge2)
                         nodes[edge1.leftnode].variableList.remove(edge1)
                         nodes[edge2.leftnode].variableList.append(edge2)
-                        edges.add(edge1)
-                        edges.add(edge2)
-                        judge=True
-                        continue
-                    elif edge2 not in edges:
-                        nodes[self.node].incidentEdges[edge2.rightcolor]=edge1
-                        nodes[self.node].incidentEdges[edge1.rightcolor]=edge2
-                        temp=edge1.rightcolor
-                        edge1.rightcolor=edge2.rightcolor
-                        edge2.rightcolor=temp
-                        edge1.id=-1
-                        edge2.id=-1
-                        edge1.nodecount={}
-                        edge2.nodecount={}
-                        edge1.count=0
-                        edge2.count=0
-                        nodes[self.node].variableList.remove(edge1)
-                        nodes[edge1.leftnode].variableList.remove(edge1)
-                        edges.add(edge1)
-                        edges.add(edge2)
+                        colorpairs.add(edge2.rightcolor*maxcolornumber+edge1.rightcolor)
                         judge=True
                         continue
         return judge

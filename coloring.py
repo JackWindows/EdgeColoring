@@ -1,4 +1,4 @@
-maxcolornumber = 10
+maxcolornumber = 20
 class Node:
     def __init__(self):
         self.color = [True] * maxcolornumber
@@ -23,6 +23,7 @@ class Edge:
         self.id = -1
         self.count = 0
         self.nodecount = {}
+        self.path = []
         
     def __str__(self):
         return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id])
@@ -39,6 +40,7 @@ class ExThread:
         for edge1 in variableList:
             if edge1.leftcolor==edge1.rightcolor:
                 continue
+            edge1.path.append(str(edge1.leftnode)+'-'+str(edge1.rightnode))
             if(self.node < n):
                     edge2=nodes[self.node].incidentEdges[edge1.rightcolor]
                     if edge2 is None:
@@ -81,6 +83,7 @@ class ExThread:
                         edge2.nodecount={}
                         edge1.count=0
                         edge2.count=0
+                        edge2.path=[]
                         nodes[self.node].variableList.remove(edge1)
                         nodes[edge1.rightnode].variableList.remove(edge1)
                         colorpairs.add(edge2.leftcolor*maxcolornumber+edge1.leftcolor)
@@ -107,8 +110,10 @@ class ExThread:
                         edge2.leftcolor=temp
                         edge2.id=edge1.id
                         edge2.nodecount=edge1.nodecount
+                        edge2.path=edge1.path
                         edge1.id=-1
                         edge1.nodecount={}
+                        edge1.path=[]
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.append(edge2)
                         nodes[edge1.rightnode].variableList.remove(edge1)
@@ -158,6 +163,7 @@ class ExThread:
                         edge2.nodecount={}
                         edge1.count=0
                         edge2.count=0
+                        edge2.path=[]
                         nodes[self.node].variableList.remove(edge1)
                         nodes[edge1.leftnode].variableList.remove(edge1)
                         colorpairs.add(edge2.rightcolor*maxcolornumber+edge1.rightcolor)
@@ -175,8 +181,10 @@ class ExThread:
                         edge2.rightcolor=temp
                         edge2.id=edge1.id
                         edge2.nodecount=edge1.nodecount
+                        edge2.path=edge1.path
                         edge1.id=-1
                         edge1.nodecount={}
+                        edge1.path=[]
                         nodes[self.node].variableList.remove(edge1)
                         nodes[self.node].variableList.append(edge2)
                         nodes[edge1.leftnode].variableList.remove(edge1)
@@ -356,7 +364,7 @@ while(judge):
         if(thread.move()):
             judge=True
     draw()
-    if count>n*5:
+    if count>n*10:
         #Storage the initial Condition for regenerate the deadlock
         f=open(initialEdgesFile,'w')
         for edge in initialEdges:
@@ -364,6 +372,10 @@ while(judge):
         f.close()
         break
 
+for edge in AdjacencyList:
+    if edge.leftcolor!=edge.rightcolor:
+        print edge.leftcolor,',',edge.rightcolor
+        print edge.path
 k=0
 ax.lines=lines[k]
 plt.show()

@@ -382,10 +382,11 @@ while(judge):
         if(thread.move()):
             judge=True
     draw()
-    if i>=n:
+    if i>=n or not judge:
         colorUsable=[True]*maxcolornumber
         for edge in AdjacencyList:
             if edge.leftcolor!=edge.rightcolor:
+                judge=True
                 if colorUsable[edge.leftcolor] and colorUsable[edge.rightcolor]:
                     edge.freeze=False
                     colorUsable[edge.leftcolor]=False

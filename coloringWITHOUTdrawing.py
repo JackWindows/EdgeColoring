@@ -250,15 +250,15 @@ while True:
                 judge=True
         if i>=n or not judge:
             colorUsable=[True]*maxcolornumber
-            for edge in AdjacencyList:
-                if edge.leftcolor!=edge.rightcolor:
+            for k in range(n):
+                for var in nodes[k].variableList:
                     judge=True
-                    if colorUsable[edge.leftcolor] and colorUsable[edge.rightcolor]:
-                        edge.freeze=False
-                        colorUsable[edge.leftcolor]=False
-                        colorUsable[edge.rightcolor]=False
+                    if colorUsable[var.leftcolor] and colorUsable[var.rightcolor]:
+                        var.freeze=False
+                        colorUsable[var.leftcolor]=False
+                        colorUsable[var.rightcolor]=False
                     else:
-                        edge.freeze=True
+                        var.freeze=True
             i=0
         if count>(2*n)**2*2:
             #Storage the initial Condition for regenerate the deadlock
@@ -279,7 +279,7 @@ while True:
             data[len(AdjacencyList)][count*2]+=1
         else:
             data[len(AdjacencyList)][count*2]=1
-    if step>=10000000:
+    if step>=50000000:
         import json
         datafile=open("data",'w')
         print>>datafile, json.dumps(data,sort_keys=True,indent=4)

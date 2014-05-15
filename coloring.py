@@ -382,7 +382,7 @@ while(judge):
         if(thread.move()):
             judge=True
     draw()
-    if i>=n or not judge:
+    if i>=n*2 or not judge:
         colorUsable=[True]*maxcolornumber
         for k in range(n):
             for var in nodes[k].variableList:

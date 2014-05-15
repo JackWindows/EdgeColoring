@@ -1,5 +1,5 @@
 import json
-f=open('data')
+f=open('n=34,5000W')
 data=json.load(f)
 f.close()
 totalCount=0
@@ -17,4 +17,3 @@ for key in sorted(eCount, key=int):
     avgCount+=float(key)*ratio
     print key.ljust(4),' ratio:',(str(ratio*100)+'%').ljust(10),' Count:',eCount[key]
 print avgCount
-raw_input()

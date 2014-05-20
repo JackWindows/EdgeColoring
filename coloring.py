@@ -1,4 +1,4 @@
-maxcolornumber = 20
+maxcolornumber = 500
 class Node:
     def __init__(self):
         self.color = [True] * maxcolornumber
@@ -21,15 +21,17 @@ class Edge:
         self.leftcolor = leftcolor
         self.rightcolor = rightcolor
         self.id = -1
+        if leftcolor!=rightcolor:
+            self.id=leftnode
         self.count = 0
         self.nodecount = {}
         self.path = []
         self.freeze = False
         
     def __str__(self):
-        return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id,self.freeze])
+        return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id,self.count,self.freeze])
     def __repr__(self):
-        return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id,self.freeze])
+        return str([self.leftnode,self.rightnode,self.leftcolor,self.rightcolor,self.id,self.count,self.freeze])
 
 class ExThread:
     def __init__(self,node):
@@ -37,7 +39,7 @@ class ExThread:
     def move(self):
         colorpairs=set()
         judge=False
-        #print self.node
+        #print(self.node)
         #print nodes[self.node].variableList
         variableList=nodes[self.node].variableList[:]
         for edge1 in variableList:
@@ -66,6 +68,8 @@ class ExThread:
                         edge2.leftcolor=temp
                         edge1.id=-1
                         edge2.id=-1
+                        edge1.count=0
+                        edge2.count=0
                         edge1.nodecount={}
                         edge2.nodecount={}
                         edge1.freeze=True
@@ -84,7 +88,7 @@ class ExThread:
                         edge1.leftcolor=edge2.leftcolor
                         edge2.leftcolor=temp
                         edge1.id=-1
-                        edge2.id=-1
+                        edge2.id=edge2.leftnode
                         edge1.nodecount={}
                         edge2.nodecount={}
                         edge1.count=0
@@ -104,13 +108,7 @@ class ExThread:
                                 continue
                         elif edge1.id<edge2.leftnode:
                             edge1.id=edge2.leftnode
-                        if edge1.leftnode not in edge1.nodecount:
-                            edge1.nodecount[edge1.leftnode]=1
-                        else:
-                            edge1.nodecount[edge1.leftnode]+=1
-                        if edge1.nodecount[edge1.leftnode]>=3:
-                            edge1.id=-1
-                            edge1.nodecount={}
+                            edge1.count=0
                         nodes[self.node].incidentEdges[edge2.leftcolor]=edge1
                         nodes[self.node].incidentEdges[edge1.leftcolor]=edge2
                         temp=edge1.leftcolor
@@ -120,6 +118,8 @@ class ExThread:
                         edge2.nodecount=edge1.nodecount
                         edge2.path=edge1.path
                         edge1.id=-1
+                        edge2.count=edge1.count
+                        edge1.count=0
                         edge1.freeze=True
                         edge2.freeze=False
                         edge1.nodecount={}
@@ -154,6 +154,8 @@ class ExThread:
                         edge1.nodecount={}
                         edge1.id=-1
                         edge2.id=-1
+                        edge1.count=0
+                        edge2.count=0
                         edge1.freeze=True
                         edge2.freeze=True
                         nodes[self.node].variableList.remove(edge1)
@@ -170,7 +172,7 @@ class ExThread:
                         edge1.rightcolor=edge2.rightcolor
                         edge2.rightcolor=temp
                         edge1.id=-1
-                        edge2.id=-1
+                        edge2.id=edge2.leftnode
                         edge1.freeze=True
                         edge2.freeze=False
                         edge1.nodecount={}
@@ -197,6 +199,8 @@ class ExThread:
                         edge2.nodecount=edge1.nodecount
                         edge2.path=edge1.path
                         edge1.id=-1
+                        edge2.count=edge1.count
+                        edge1.count=0
                         edge1.freeze=True
                         edge2.freeze=False
                         edge1.nodecount={}
@@ -303,7 +307,7 @@ def press(event):
 
 
 #main function
-n = 6
+n = 10
 scale = 3
 nodes = [Node() for each in range(n*2)]
 initialEdgesFile='initialEdges'
@@ -382,17 +386,23 @@ while(judge):
         if(thread.move()):
             judge=True
     draw()
-    if i>=n*2 or not judge:
+    if i>=n*4 or not judge:
         colorUsable=[True]*maxcolornumber
+        colorPairs=set()
         for k in range(n):
             for var in nodes[k].variableList:
+                var.id=var.leftnode
                 judge=True
                 if colorUsable[var.leftcolor] and colorUsable[var.rightcolor]:
                     var.freeze=False
                     colorUsable[var.leftcolor]=False
                     colorUsable[var.rightcolor]=False
+                    colorPairs.add(var.leftcolor*maxcolornumber+var.rightcolor)
                 else:
-                    var.freeze=True
+                    if var.leftcolor*maxcolornumber+var.rightcolor in colorPairs or var.rightcolor*maxcolornumber+var.leftcolor in colorPairs:
+                        var.freeze=False
+                    else:
+                        var.freeze=True
         i=0
     if count>(2*n)**2*2:
         #Storage the initial Condition for regenerate the deadlock
@@ -404,8 +414,9 @@ while(judge):
 
 for edge in AdjacencyList:
     if edge.leftcolor!=edge.rightcolor:
-        print edge.leftcolor,',',edge.rightcolor
-        print edge.path
+        print(edge.leftcolor,',',edge.rightcolor)
+        print(edge.path)
+print(len(lines))
 k=0
 ax.lines=lines[k]
 plt.show()

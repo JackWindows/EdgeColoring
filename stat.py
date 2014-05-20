@@ -1,5 +1,5 @@
 import json
-f=open('n=34,5000W')
+f=open('n=10,5000W')
 data=json.load(f)
 f.close()
 totalCount=0

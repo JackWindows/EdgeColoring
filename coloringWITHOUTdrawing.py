@@ -1,4 +1,4 @@
-maxcolornumber = 50
+maxcolornumber = 500
 class Node:
     def __init__(self):
         self.color = [True] * maxcolornumber
@@ -25,6 +25,8 @@ class Edge:
         self.leftcolor = leftcolor
         self.rightcolor = rightcolor
         self.id = -1
+        if leftcolor!=rightcolor:
+            self.id=leftnode
         self.count = 0
         self.freeze = False
     def __str__(self):
@@ -63,6 +65,8 @@ class ExThread:
                         edge2.leftcolor=temp
                         edge1.id=-1
                         edge2.id=-1
+                        edge1.count=0
+                        edge2.count=0
                         edge1.freeze=True
                         edge2.freeze=True
                         nodes[self.node].variableList.remove(edge1)
@@ -79,7 +83,7 @@ class ExThread:
                         edge1.leftcolor=edge2.leftcolor
                         edge2.leftcolor=temp
                         edge1.id=-1
-                        edge2.id=-1
+                        edge2.id=edge2.leftnode
                         edge1.count=0
                         edge2.count=0
                         edge1.freeze=True
@@ -96,6 +100,7 @@ class ExThread:
                                 continue
                         elif edge1.id<edge2.leftnode:
                             edge1.id=edge2.leftnode
+                            edge1.count=0
                         nodes[self.node].incidentEdges[edge2.leftcolor]=edge1
                         nodes[self.node].incidentEdges[edge1.leftcolor]=edge2
                         temp=edge1.leftcolor
@@ -103,6 +108,8 @@ class ExThread:
                         edge2.leftcolor=temp
                         edge2.id=edge1.id
                         edge1.id=-1
+                        edge2.count=edge1.count
+                        edge1.count=0
                         edge1.freeze=True
                         edge2.freeze=False
                         nodes[self.node].variableList.remove(edge1)
@@ -133,6 +140,8 @@ class ExThread:
                         edge2.rightcolor=temp
                         edge1.id=-1
                         edge2.id=-1
+                        edge1.count=0
+                        edge2.count=0
                         edge1.freeze=True
                         edge2.freeze=True
                         nodes[self.node].variableList.remove(edge1)
@@ -149,7 +158,7 @@ class ExThread:
                         edge1.rightcolor=edge2.rightcolor
                         edge2.rightcolor=temp
                         edge1.id=-1
-                        edge2.id=-1
+                        edge2.id=edge2.leftnode
                         edge1.freeze=True
                         edge2.freeze=False
                         edge1.count=0
@@ -171,6 +180,8 @@ class ExThread:
                         edge2.rightcolor=temp
                         edge2.id=edge1.id
                         edge1.id=-1
+                        edge2.count=edge1.count
+                        edge1.count=0
                         edge1.freeze=True
                         edge2.freeze=False
                         nodes[self.node].variableList.remove(edge1)
@@ -192,7 +203,7 @@ def RequestGenerator(n):
 
 
 #main function
-n = 6
+n = 10
 initialEdgesFile='initialEdges'
 slots = 3
 step=0
@@ -241,24 +252,30 @@ while True:
         i+=1
         judge=False
         for thread in ExchangeThreads2:
-            #print thread.node
+            #print(thread.node)
             if(thread.move()):
                 judge=True
         for thread in ExchangeThreads1:
-            #print thread.node
+            #print(thread.node)
             if(thread.move()):
                 judge=True
-        if i>=n*2 or not judge:
+        if i>=n*4 or not judge:
             colorUsable=[True]*maxcolornumber
+            colorPairs=set()
             for k in range(n):
                 for var in nodes[k].variableList:
+                    var.id=var.leftnode
                     judge=True
                     if colorUsable[var.leftcolor] and colorUsable[var.rightcolor]:
                         var.freeze=False
                         colorUsable[var.leftcolor]=False
                         colorUsable[var.rightcolor]=False
+                        colorPairs.add(var.leftcolor*maxcolornumber+var.rightcolor)
                     else:
-                        var.freeze=True
+                        if var.leftcolor*maxcolornumber+var.rightcolor in colorPairs or var.rightcolor*maxcolornumber+var.leftcolor in colorPairs:
+                            var.freeze=False
+                        else:
+                            var.freeze=True
             i=0
         if count>(2*n)**2*2:
             #Storage the initial Condition for regenerate the deadlock
@@ -266,7 +283,7 @@ while True:
             for edge in initialEdges:
                 f.write(str(edge)+'\n')
             f.close()
-            print "Deadlock FOUND!!!"
+            print("Deadlock FOUND!!!")
             break
     if len(AdjacencyList) in data:
         if count*2 in data[len(AdjacencyList)]:
@@ -279,10 +296,10 @@ while True:
             data[len(AdjacencyList)][count*2]+=1
         else:
             data[len(AdjacencyList)][count*2]=1
-    if step>=50000000:
+    if step>=500000:
         import json
         datafile=open("data",'w')
-        print>>datafile, json.dumps(data,sort_keys=True,indent=4)
+        print(json.dumps(data,sort_keys=True,indent=4),file=datafile)
         datafile.close()
         break
 
